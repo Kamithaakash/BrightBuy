@@ -1,0 +1,24 @@
+# Installed JavaScript dependencies
+node_modules/
+
+# Local environment variables
+.env
+.env.*
+!.env.example
+
+# Generated frontend builds
+dist/
+
+# Test output
+coverage/
+
+# Logs
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
+# Personal IDE workspaces and temporary local tooling
+*.code-workspace
+.idea/
+.tooling/
