@@ -20,7 +20,6 @@ import { makeCancellation } from './services/cancellation.js';
 import { readCartForCheckout as readCart } from './services/cart.js';
 import { getDestination, deliveryDays } from './services/locations.js';
 import { applyStockChange } from './services/inventory.js';
-import { db } from './db.js';
 
 // App creation is separate from listen(): tests can use an isolated database.
 export function createApp(db, secret) {
@@ -70,8 +69,4 @@ export function createApp(db, secret) {
   app.use((req, res, next) => next(new ApiError(404, 'NOT_FOUND', 'Resource not found.')));
   app.use(errorHandler);
   return app;
-
-
 }
-
-export default createApp(db, process.env.JWT_SECRET || 'brightbuy_secure_jwt_token_2026_super_secret_key');
