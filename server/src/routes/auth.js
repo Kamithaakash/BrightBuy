@@ -69,25 +69,25 @@ export function createAuthRoutes(db, secret, requireAuthentication, emailOptions
 
     try {
       await inTransaction(db, async (connection) => {
-      const address = await validateAddressInput(connection, req.body.address);
-      const [result] = await connection.execute(
-        `INSERT INTO customers (first_name, last_name, name, email, password_hash, phone_number, role, email_verified)
+        const address = await validateAddressInput(connection, req.body.address);
+        const [result] = await connection.execute(
+          `INSERT INTO customers (first_name, last_name, name, email, password_hash, phone_number, role, email_verified)
          VALUES (?, ?, ?, ?, ?, ?, 'customer', 0)`,
-        [firstName.trim(), lastName.trim(), combinedName, normalizedEmail, passwordHash, phone],
-      );
-      insertId = result.insertId;
+          [firstName.trim(), lastName.trim(), combinedName, normalizedEmail, passwordHash, phone],
+        );
+        insertId = result.insertId;
 
-      await connection.execute(
-        'INSERT INTO addresses (customer_id, recipient, line1, line2, line3, city, city_id, postal_code, country, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)',
-        [insertId, address.recipient, address.line1, address.line2, address.line3, address.cityName, address.cityId, address.postalCode, address.country],
-      );
-      const [freshRow] = await connection.execute(
-        'SELECT registered_at FROM customers WHERE id = ?',
-        [insertId],
-      );
-      if (freshRow.length && freshRow[0].registered_at) {
-        registeredAt = new Date(freshRow[0].registered_at).toISOString();
-      }
+        await connection.execute(
+          'INSERT INTO addresses (customer_id, recipient, line1, line2, line3, city, city_id, postal_code, country, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)',
+          [insertId, address.recipient, address.line1, address.line2, address.line3, address.cityName, address.cityId, address.postalCode, address.country],
+        );
+        const [freshRow] = await connection.execute(
+          'SELECT registered_at FROM customers WHERE id = ?',
+          [insertId],
+        );
+        if (freshRow.length && freshRow[0].registered_at) {
+          registeredAt = new Date(freshRow[0].registered_at).toISOString();
+        }
       });
     } catch (err) {
       if (err.code === 'ER_DUP_ENTRY' || err.errno === 1062) {

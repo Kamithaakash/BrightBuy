@@ -1,19 +1,23 @@
 import nodemailer from 'nodemailer';
 import { buildOrderEmail } from './order-email.js';
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
+function createTransporter() {
+  const port = Number(process.env.BREVO_SMTP_PORT || 465);
+  const secure = port === 465;
+  return nodemailer.createTransport({
+    host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
+    port,
+    secure,
+    pool: false,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
     auth: {
-        user: process.env.BREVO_SMTP_USER,
-        pass: process.env.BREVO_SMTP_KEY,
+      user: process.env.BREVO_SMTP_USER,
+      pass: process.env.BREVO_SMTP_KEY,
     },
-});
+  });
+}
 
 export async function sendOrderInvoiceEmail({ customerEmail, customerName, order }) {
     if (!process.env.BREVO_SMTP_USER || !process.env.BREVO_SMTP_KEY) {
@@ -21,6 +25,7 @@ export async function sendOrderInvoiceEmail({ customerEmail, customerName, order
         return;
     }
     try {
+        const transporter = createTransporter();
         await transporter.sendMail({
             from: process.env.EMAIL_FROM || `"BrightBuy Store" <${process.env.BREVO_SMTP_USER}>`,
             to: customerEmail,
@@ -33,5 +38,6 @@ export async function sendOrderInvoiceEmail({ customerEmail, customerName, order
 }
 export async function sendAccountEmail({to, ...message}) {
     if (!process.env.BREVO_SMTP_USER || !process.env.BREVO_SMTP_KEY || !process.env.EMAIL_FROM) throw new Error('Account email is not configured.');
+    const transporter = createTransporter();
     await transporter.sendMail({from: process.env.EMAIL_FROM, to, ...message});
 }
