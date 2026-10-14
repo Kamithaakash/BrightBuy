@@ -96,7 +96,7 @@ export function createAuthRoutes(db, secret, requireAuthentication, emailOptions
       throw err;
     }
 
-    recovery.request(normalizedEmail, 'verify').catch(() => console.error('[Email] Verification email could not be delivered. Check email configuration.'));
+    recovery.request(normalizedEmail, 'verify').catch((err) => console.error('[Email] Verification email could not be delivered:', err));
     res.status(201).json({
       data: {
         id: insertId,

@@ -21,7 +21,7 @@ export function createRecoveryRoutes(recovery) {
       if (typeof email !== 'string' || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) throw new ApiError(400,'VALIDATION_ERROR','Enter a valid email address.');
       // Always respond before account lookup / SMTP to avoid disclosing account existence.
       res.status(202).json({data:{message:'If this account is eligible, we will email a link shortly. Check your inbox and spam folder.'}});
-      recovery.request(email.trim().toLowerCase(),purpose).catch(() => console.error('[Email] Account link could not be delivered. Check email configuration.'));
+      recovery.request(email.trim().toLowerCase(),purpose).catch((err) => console.error('[Email] Account link could not be delivered:', err));
     });
   }
   for (const [path,purpose] of [['verify-email','verify'],['reset-password','reset']]) {
