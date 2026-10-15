@@ -96,7 +96,14 @@ export function createAuthRoutes(db, secret, requireAuthentication, emailOptions
       throw err;
     }
 
-    recovery.request(normalizedEmail, 'verify').catch((err) => console.error('[Email] Verification email could not be delivered:', err));
+    // Keep the request alive until sending settles on serverless hosts.
+    // The account is already committed: a mail failure must not undo registration.
+    let verificationEmailSent = false;
+    try {
+      verificationEmailSent = await recovery.request(normalizedEmail, 'verify');
+    } catch (err) {
+      console.error('[Email] Verification email could not be delivered:', err);
+    }
     res.status(201).json({
       data: {
         id: insertId,
@@ -107,6 +114,7 @@ export function createAuthRoutes(db, secret, requireAuthentication, emailOptions
         lastName: lastName.trim(),
         phoneNumber: phone,
         registeredAt,
+        verificationEmailSent,
       },
     });
   });

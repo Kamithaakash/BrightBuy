@@ -16,12 +16,17 @@ export function createRecoveryRoutes(recovery) {
     next();
   });
   for (const [path, purpose] of [['forgot-password', 'reset'], ['resend-verification', 'verify']]) {
-    router.post('/auth/' + path, (req, res) => {
+    router.post('/auth/' + path, async (req, res) => {
       const email = req.body?.email;
       if (typeof email !== 'string' || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) throw new ApiError(400, 'VALIDATION_ERROR', 'Enter a valid email address.');
-      // Always respond before account lookup / SMTP to avoid disclosing account existence.
-      res.status(202).json({ data: { message: 'If this account is eligible, we will email a link shortly. Check your inbox and spam folder.' } });
-      recovery.request(email.trim().toLowerCase(), purpose).catch((err) => console.error('[Email] Account link could not be delivered:', err));
+      // Await the complete task so serverless hosts cannot suspend email sending.
+      // Keep the response identical for unknown, throttled and failed requests.
+      try {
+        await recovery.request(email.trim().toLowerCase(), purpose);
+      } catch (err) {
+        console.error('[Email] Account link could not be delivered:', err);
+      }
+      res.status(202).json({ data: { message: 'If this account is eligible, we have requested an email link. Check your inbox and spam folder. If no email arrives, wait a minute and try again.' } });
     });
   }
   for (const [path, purpose] of [['verify-email', 'verify'], ['reset-password', 'reset']]) {

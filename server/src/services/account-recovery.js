@@ -23,12 +23,16 @@ export function makeAccountRecovery(db, {send = sendAccountEmail, appUrl = proce
         return user;
       });
       if (recipient) {
-        try { await send({to:recipient.email,...buildAccountEmail({purpose,name:recipient.name,link})}); }
+        try {
+          await send({to:recipient.email,...buildAccountEmail({purpose,name:recipient.name,link})});
+          return true;
+        }
         catch (error) {
           await db.execute('DELETE FROM account_tokens WHERE token_hash=?', [tokenHash(token)]);
           throw error;
         }
       }
+      return false;
     },
     async consume(token, purpose, password) {
       if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) throw invalid();
